@@ -5,16 +5,17 @@
 @inject NavigationManager Nav
 @inject AuthenticationStateProvider AuthState
 @inject AccountService Accounts
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>@(IsNew ? "New Post" : "Edit Post") — ClassicBlog</PageTitle>
+<PageTitle>@(IsNew ? L["Editor_New"] : L["Editor_Edit"]) — ClassicBlog</PageTitle>
 
 <div class="page-header">
-    <h1>@(IsNew ? "New Post" : "Edit Post")</h1>
+    <h1>@(IsNew ? L["Editor_New"] : L["Editor_Edit"])</h1>
 </div>
 
 @if (model is null)
 {
-    <p>Loading…</p>
+    <p>@L["Common_Loading"]</p>
 }
 else
 {
@@ -22,34 +23,30 @@ else
         <DataAnnotationsValidator />
 
         <div class="form-group">
-            <label for="title">Title</label>
+            <label for="title">@L["Editor_Title"]</label>
             <InputText id="title" class="form-control" @bind-Value="model.Title" />
             <ValidationMessage For="@(() => model.Title)" />
         </div>
 
         <div class="form-group">
-            <label for="excerpt">Excerpt</label>
+            <label for="excerpt">@L["Editor_Excerpt"]</label>
             <InputText id="excerpt" class="form-control" @bind-Value="model.Excerpt" />
             <ValidationMessage For="@(() => model.Excerpt)" />
         </div>
 
         <div class="form-group">
-            <label for="content">Content <small class="text-muted">(Markdown supported)</small></label>
+            <label for="content">@L["Editor_Content"] <small class="text-muted">(@L["Editor_ContentHint"])</small></label>
             <InputTextArea id="content" class="form-control" rows="14" @bind-Value="model.Content" @oninput="OnContentInput" />
             <ValidationMessage For="@(() => model.Content)" />
-            <span class="help-block text-muted">
-                Supports: <code># headings</code>, <code>**bold**</code>, <code>*italic*</code>,
-                <code>`code`</code>, <code>```fenced```</code>, <code>- lists</code>,
-                <code>&gt; quote</code>, <code>[link](url)</code>, <code>![img](url)</code>.
-            </span>
+            <span class="help-block text-muted">@L["Editor_Help"]</span>
         </div>
 
         <div class="form-group">
-            <label>Preview</label>
+            <label>@L["Editor_Preview"]</label>
             <div class="post-content well well-sm">
                 @if (string.IsNullOrWhiteSpace(previewText))
                 {
-                    <span class="text-muted">Nothing to preview yet.</span>
+                    <span class="text-muted">@L["Editor_PreviewEmpty"]</span>
                 }
                 else
                 {
@@ -60,12 +57,12 @@ else
 
         <div class="checkbox">
             <label>
-                <InputCheckbox @bind-Value="model.IsPublished" /> Published
+                <InputCheckbox @bind-Value="model.IsPublished" /> @L["Editor_Published"]
             </label>
         </div>
 
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a href="/manage" class="btn btn-default">Cancel</a>
+        <button type="submit" class="btn btn-primary">@L["Editor_Save"]</button>
+        <a href="/manage" class="btn btn-default">@L["Common_Cancel"]</a>
     </EditForm>
 }
 

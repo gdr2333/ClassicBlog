@@ -1,19 +1,22 @@
 @page "/"
 @inject BlogDbContext Db
+@inject VisitCounterService Counter
+@inject IStringLocalizer<SharedResource> L
 
 <PageTitle>ClassicBlog</PageTitle>
 
 <div class="page-header">
-    <h1>Recent Posts <small>latest from the blog</small></h1>
+    <h1>@L["Home_RecentPosts"] <small>@L["Home_Subtitle"]</small></h1>
+    <p class="text-muted small">@L["Home_Visits", visitCount]</p>
 </div>
 
 @if (posts is null)
 {
-    <p>Loading…</p>
+    <p>@L["Common_Loading"]</p>
 }
 else if (posts.Count == 0)
 {
-    <div class="alert alert-info">No posts have been published yet.</div>
+    <div class="alert alert-info">@L["Home_Empty"]</div>
 }
 else
 {
@@ -26,7 +29,7 @@ else
             <div class="panel-body">
                 <p class="text-muted small">@post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</p>
                 <p>@post.Excerpt</p>
-                <a href="@($"/post/{post.Id}")" class="btn btn-default btn-sm">Read more &raquo;</a>
+                <a href="@($"/post/{post.Id}")" class="btn btn-default btn-sm">@L["Home_ReadMore"]</a>
             </div>
         </div>
     }
@@ -34,6 +37,8 @@ else
 
 @code {
     private List<Post>? posts;
+    private long visitCount;
+    private const string CounterPath = "home";
 
     protected override async Task OnInitializedAsync()
     {
@@ -42,5 +47,16 @@ else
             .Where(p => p.IsPublished)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
+
+        visitCount = await Counter.GetAsync(CounterPath);
+    }
+
+    // Increment once per real visit (interactive circuit). OnAfterRender does not
+    // fire during prerender, so this counts each browser view exactly once,
+    // including in-circuit navigation, without double-counting the prerender pass.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await Counter.IncrementAsync(CounterPath);
     }
 }

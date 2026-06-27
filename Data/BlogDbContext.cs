@@ -8,6 +8,7 @@ public class BlogDbContext(DbContextOptions<BlogDbContext> options) : DbContext(
     public DbSet<Post> Posts => Set<Post>();
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<ApplicationUser> Users => Set<ApplicationUser>();
+    public DbSet<PageView> PageViews => Set<PageView>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -36,6 +37,11 @@ public class BlogDbContext(DbContextOptions<BlogDbContext> options) : DbContext(
         modelBuilder.Entity<ApplicationUser>(e =>
         {
             e.HasIndex(u => u.Username).IsUnique();
+        });
+
+        modelBuilder.Entity<PageView>(e =>
+        {
+            e.HasIndex(p => p.Path).IsUnique();
         });
 
         base.OnModelCreating(modelBuilder);

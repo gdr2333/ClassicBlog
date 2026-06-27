@@ -1,3 +1,5 @@
+@inject IStringLocalizer<SharedResource> L
+
 <div class="comment-node" style="margin-left:@(Depth * 24)px">
     <div class="panel panel-default">
         <div class="panel-heading">
@@ -6,7 +8,7 @@
         </div>
         <div class="panel-body">
             <div class="comment-body">@((MarkupString)MarkdownRenderer.ToHtml(Comment.Content))</div>
-            <button class="btn btn-default btn-xs" @onclick="() => OnReply.InvokeAsync(Comment.Id)">Reply</button>
+            <button class="btn btn-default btn-xs" @onclick="() => OnReply.InvokeAsync(Comment.Id)">@L["Post_Reply"]</button>
         </div>
     </div>
 

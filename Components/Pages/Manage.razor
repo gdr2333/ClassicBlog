@@ -2,25 +2,26 @@
 @attribute [Authorize]
 @inject BlogDbContext Db
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Manage — ClassicBlog</PageTitle>
+<PageTitle>@L["Manage_PageTitle"]</PageTitle>
 
 <div class="page-header">
-    <h1>Manage Posts <small><a href="/manage/new" class="btn btn-primary btn-sm">+ New post</a></small></h1>
+    <h1>@L["Manage_Posts"] <small><a href="/manage/new" class="btn btn-primary btn-sm">@L["Manage_NewPost"]</a></small></h1>
 </div>
 
 @if (posts is null)
 {
-    <p>Loading…</p>
+    <p>@L["Common_Loading"]</p>
 }
 else
 {
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>Title</th>
-                <th>Created</th>
-                <th>Status</th>
+                <th>@L["Manage_ColTitle"]</th>
+                <th>@L["Manage_ColCreated"]</th>
+                <th>@L["Manage_ColStatus"]</th>
                 <th>&nbsp;</th>
             </tr>
         </thead>
@@ -33,17 +34,17 @@ else
                     <td>
                         @if (post.IsPublished)
                         {
-                            <span class="label label-success">Published</span>
+                            <span class="label label-success">@L["Manage_Published"]</span>
                         }
                         else
                         {
-                            <span class="label label-default">Draft</span>
+                            <span class="label label-default">@L["Manage_Draft"]</span>
                         }
                     </td>
                     <td>
-                        <a href="@($"/post/{post.Id}")" class="btn btn-default btn-xs">View</a>
-                        <a href="@($"/manage/{post.Id}/edit")" class="btn btn-default btn-xs">Edit</a>
-                        <button type="button" class="btn btn-danger btn-xs" @onclick="async () => await DeleteAsync(post.Id)">Delete</button>
+                        <a href="@($"/post/{post.Id}")" class="btn btn-default btn-xs">@L["Manage_View"]</a>
+                        <a href="@($"/manage/{post.Id}/edit")" class="btn btn-default btn-xs">@L["Manage_Edit"]</a>
+                        <button type="button" class="btn btn-danger btn-xs" @onclick="async () => await DeleteAsync(post.Id)">@L["Common_Delete"]</button>
                     </td>
                 </tr>
             }

@@ -1,9 +1,10 @@
 @page "/access-denied"
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Access Denied — ClassicBlog</PageTitle>
+<PageTitle>@L["AccessDenied_PageTitle"]</PageTitle>
 
 <div class="alert alert-danger">
-    <h3>Access denied</h3>
-    <p>You don't have permission to view this page.</p>
-    <a href="/" class="btn btn-default">Back to home</a>
+    <h3>@L["AccessDenied_Heading"]</h3>
+    <p>@L["AccessDenied_Body"]</p>
+    <a href="/" class="btn btn-default">@L["AccessDenied_Back"]</a>
 </div>

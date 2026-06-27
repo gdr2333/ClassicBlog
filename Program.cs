@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using ClassicBlog.Components;
 using ClassicBlog.Data;
@@ -9,7 +10,9 @@ using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 
 namespace ClassicBlog;
 
@@ -63,6 +66,21 @@ public class Program
         builder.Services.AddScoped<IEmailService, EmailService>();
         builder.Services.AddScoped<CommentService>();
 
+        // Simple visit counter.
+        builder.Services.AddScoped<VisitCounterService>();
+
+        // Localization (zh-CN default, en-US available). UI strings live in Resources/.
+        // No ResourcesPath: the resx manifest name (ClassicBlog.Resources.SharedResource)
+        // already matches the SharedResource type's full name, so the localizer resolves it.
+        builder.Services.AddLocalization();
+        var supportedCultures = new[] { new CultureInfo("zh-CN"), new CultureInfo("en-US") };
+        builder.Services.Configure<RequestLocalizationOptions>(opts =>
+        {
+            opts.DefaultRequestCulture = new RequestCulture("zh-CN");
+            opts.SupportedCultures = supportedCultures;
+            opts.SupportedUICultures = supportedCultures;
+        });
+
         var app = builder.Build();
 
         // Create the database (if needed) and seed sample posts on first run.
@@ -102,6 +120,9 @@ public class Program
 
         app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
         app.UseHttpsRedirection();
+
+        // Culture (from cookie) must be resolved before routing renders pages.
+        app.UseRequestLocalization();
 
         app.UseAuthentication();
         app.UseAuthorization();
@@ -149,6 +170,24 @@ public class Program
             await antiforgery.ValidateRequestAsync(ctx);
             await ctx.SignOutAsync("Cookie", new AuthenticationProperties());
             ctx.Response.Redirect("/");
+        });
+
+        // Switch UI culture: sets the request-culture cookie and redirects back.
+        app.MapPost("/culture/set", async (HttpContext ctx) =>
+        {
+            var form = await ctx.Request.ReadFormAsync();
+            var culture = (string?)form["culture"];
+            var redirect = (string?)form["redirect"];
+
+            if (culture == "zh-CN" || culture == "en-US")
+            {
+                ctx.Response.Cookies.Append(
+                    CookieRequestCultureProvider.DefaultCookieName,
+                    CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
+                    new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
+            }
+
+            ctx.Response.Redirect(IsLocalReturnUrl(redirect) ? redirect! : "/");
         });
 
         app.Run();

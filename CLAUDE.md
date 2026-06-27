@@ -29,7 +29,7 @@ Blazor **interactive Server** render mode (components run on the server, UI upda
 ### Database (EF Core + SQLite)
 - Connection string `ConnectionStrings:Default` = `Data Source=blog.db` (file is created in the project/content root at runtime; gitignored).
 - **No migrations.** DB initialization uses `Database.EnsureCreatedAsync()` plus `BlogDbContext.EnsureSeedDataAsync()` at startup (see `Program.cs`). `EnsureSeedDataAsync` only seeds when `Posts` is empty. To change schema, either drop `blog.db` (it rebuilds on next run) or switch to `dotnet-ef` migrations (`dotnet tool install -g dotnet-ef` → `migrations add` → replace `EnsureCreated` with `Database.Migrate`).
-- The schema includes `Posts`, `Comments`, and `Users` (see `ApplicationUser`). `EnsureCreated` will NOT add new tables to an existing `blog.db` — delete the file after schema changes so it rebuilds.
+- The schema includes `Posts`, `Comments`, `Users` (see `ApplicationUser`), and `PageView` (visit counters). `EnsureCreated` will NOT add new tables to an existing `blog.db` — delete the file after schema changes so it rebuilds.
 - `Post.MakeSlug(title)` derives the slug; `Slug` has a unique index. Post content and comments are stored as **Markdown** and rendered via `MarkdownRenderer.ToHtml` (see below).
 
 ### bootstrap.386 is Bootstrap **3**, not 5
@@ -56,7 +56,19 @@ A lightweight custom auth layer — **not** ASP.NET Core Identity. No NuGet auth
 - `ApplicationUser.Email` is optional and managed by admins on `/admin/users` (editable inline column + create-form field). The seeded admin gets `admin@example.com` for demo notifications.
 - Schema changes (Email/AuthorId/ParentCommentId columns) require deleting `blog.db` so `EnsureCreated` rebuilds — it will not alter an existing DB.
 
-### Markdown rendering (best-effort, dependency-free)
+### Internationalization (zh-CN default, en-US available)
+UI strings are localized with ASP.NET Core's `IStringLocalizer<SharedResource>` (no extra package). Resources live in `Resources/SharedResource.resx` (English, the neutral fallback) and `Resources/SharedResource.zh-CN.resx` (Chinese); the marker type is `ClassicBlog.Resources.SharedResource`. Components inject `IStringLocalizer<SharedResource> L` (imported in `_Imports.razor`) and use `@L["Key"]` (or `@L["Key", arg]` for format strings like `Home_Visits`/`Post_Views`/`Post_CommentsCount`).
+
+- `AddLocalization()` is called **without** `ResourcesPath`. The resx manifest name (`ClassicBlog.Resources.SharedResource`, produced from `Resources/SharedResource.resx`) already matches the `SharedResource` type's full name; setting `ResourcesPath` would prepend it and break lookup. The zh-CN satellite builds to `bin/.../zh-CN/ClassicBlog.resources.dll`.
+- Cultures are configured via `RequestLocalizationOptions` (supported `zh-CN` + `en-US`, default `zh-CN`) and applied with `app.UseRequestLocalization()` before auth. The culture is resolved per HTTP request (cookie → default), so prerendered HTML is already in the right language.
+- Switching: `NavMenu.razor` has a `中文` / `English` form posting to `POST /culture/set`, which writes the `CookieRequestCultureProvider` cookie and redirects back. The form includes `<AntiforgeryToken />`; the endpoint itself does not validate antiforgery (it only sets a benign culture cookie).
+- Data-annotation validation messages (e.g. `[Required]`, `[Compare]`) render in the current culture via the framework's own satellite resources; no custom localization is wired for them.
+- Blazor HTML-encodes non-ASCII text in prerendered output, so Chinese appears as numeric entities (`&#x6700;…`) in the raw HTML source but renders correctly in the browser. Don't grep for literal CJK characters in `curl` output to verify — decode entities first (e.g. `perl -CSD -pe 's/&#x([0-9A-Fa-f]+);/chr(hex($1))/ge'`). Blog **content** (post bodies, comments) is user-authored and not localized.
+
+### Visit counter (simple)
+A per-path hit counter stored in the `PageView` table (`Path` unique, `Count`). `VisitCounterService` reads with `GetAsync` and increments with `IncrementAsync`, which uses `ExecuteUpdateAsync` (`Count = Count + 1`) for an atomic increment (no lost updates under concurrency); the first hit inserts the row, tolerating the concurrent-insert race via the unique index.
+
+Counting is done in `OnAfterRenderAsync(firstRender: true)` on `Home` (key `"home"`) and `PostDetail` (key `"post:{Id}"`), while the display value is loaded in `OnInitializedAsync`. `OnAfterRender` does **not** fire during prerender, so each real browser view — including in-circuit navigation from the home list — is counted exactly once, and the prerender pass is not double-counted. Consequence: a non-JS client (curl/SEO crawler) sees the stored count but does not increment it.
 `Markdown/MarkdownRenderer.cs` is a self-contained, **safe-by-construction** Markdown→HTML converter used for post bodies, comments, and the editor preview. It is NOT a full CommonMark/GFM implementation — it covers a subset (headings, paragraphs w/ soft-break `<br>`, blockquotes, ordered/unordered lists, fenced code, hr, inline code, images, links, bold, italic, strikethrough). When extending it:
 - All text is HTML-escaped (`Escape`); only whitelisted tags are emitted, so user Markdown (including anonymous comments) cannot inject raw HTML/script. Keep it that way — never emit user text without escaping.
 - Link/image URLs pass through `SafeLinkUrl`/`SafeImageUrl` (allow http/https/mailto and relative; block `javascript:`, `vbscript:`, `data:`).

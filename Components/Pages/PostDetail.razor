@@ -3,41 +3,44 @@
 @inject CommentService Comments
 @inject AuthenticationStateProvider AuthState
 @inject AccountService Accounts
+@inject VisitCounterService Counter
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>@(post?.Title ?? "Post") — ClassicBlog</PageTitle>
+<PageTitle>@(post?.Title ?? L["Post_NotFoundTitle"]) — ClassicBlog</PageTitle>
 
 @if (post is null)
 {
     <div class="alert alert-warning">
-        <h3>Not found</h3>
-        <p>That post does not exist. <a href="/">Back to the home page</a>.</p>
+        <h3>@L["Post_NotFoundTitle"]</h3>
+        <p>@L["Post_NotFoundBody"] <a href="/">@L["Post_BackHome"]</a></p>
     </div>
 }
 else
 {
-    <a href="/" class="btn btn-default btn-sm">&laquo; All posts</a>
+    <a href="/" class="btn btn-default btn-sm">@L["Post_AllPosts"]</a>
     <h1>@post.Title</h1>
     <p class="text-muted">
         @post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
         @if (post.Author is not null)
         {
-            <text> · by @post.Author.Username</text>
+            <text> · @L["Post_By", post.Author.Username]</text>
         }
         @if (!post.IsPublished)
         {
-            <span class="label label-warning">Unpublished</span>
+            <span class="label label-warning">@L["Post_Unpublished"]</span>
         }
+        <span class="label label-default">@L["Post_Views", viewCount]</span>
     </p>
 
     <div class="post-content">@((MarkupString)MarkdownRenderer.ToHtml(post.Content))</div>
 
     <hr />
 
-    <h3>Comments (@post.Comments.Count)</h3>
+    <h3>@L["Post_CommentsCount", post.Comments.Count]</h3>
 
     @if (roots.Count == 0)
     {
-        <p class="text-muted">No comments yet. Be the first!</p>
+        <p class="text-muted">@L["Post_NoComments"]</p>
     }
     else
     {
@@ -52,13 +55,13 @@ else
         <div class="panel-heading">
             @if (replyTarget is null)
             {
-                <text>Leave a comment <small class="text-muted">(Markdown supported · email required for reply notifications)</small></text>
+                <text>@L["Post_LeaveComment"] <small class="text-muted">(@L["Post_LeaveCommentHint"])</small></text>
             }
             else
             {
                 <text>
-                    Replying to <strong>@replyTarget.Author</strong>
-                    <button type="button" class="btn btn-link btn-xs" @onclick="CancelReply">cancel</button>
+                    @L["Post_ReplyingTo", replyTarget.Author]
+                    <button type="button" class="btn btn-link btn-xs" @onclick="CancelReply">@L["Common_Cancel"]</button>
                 </text>
             }
         </div>
@@ -68,25 +71,25 @@ else
 
                 <div class="row">
                     <div class="col-md-6 form-group">
-                        <label for="author">Name</label>
+                        <label for="author">@L["Post_Name"]</label>
                         <InputText id="author" class="form-control" @bind-Value="newComment.Author" />
                         <ValidationMessage For="@(() => newComment.Author)" />
                     </div>
                     <div class="col-md-6 form-group">
-                        <label for="email">Email <small class="text-muted">(required, kept private)</small></label>
+                        <label for="email">@L["Post_Email"] <small class="text-muted">(@L["Post_EmailHint"])</small></label>
                         <InputText id="email" class="form-control" @bind-Value="newComment.Email" />
                         <ValidationMessage For="@(() => newComment.Email)" />
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="content">Comment</label>
+                    <label for="content">@L["Post_Comment"]</label>
                     <InputTextArea id="content" class="form-control" rows="4" @bind-Value="newComment.Content" />
                     <ValidationMessage For="@(() => newComment.Content)" />
                 </div>
 
                 <button type="submit" class="btn btn-primary">
-                    @(replyTarget is null ? "Post comment" : "Post reply")
+                    @(replyTarget is null ? L["Post_PostComment"] : L["Post_PostReply"])
                 </button>
             </EditForm>
         </div>
@@ -101,6 +104,8 @@ else
     private Dictionary<int, List<Comment>> childrenByParent = new();
     private NewCommentForm newComment = new();
     private Comment? replyTarget;
+    private long viewCount;
+    private string CounterPath => $"post:{Id}";
 
     protected override async Task OnInitializedAsync()
     {
@@ -117,6 +122,14 @@ else
         }
 
         await LoadPostAsync();
+        viewCount = await Counter.GetAsync(CounterPath);
+    }
+
+    // Increment once per real visit (interactive circuit only — not during prerender).
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await Counter.IncrementAsync(CounterPath);
     }
 
     private async Task LoadPostAsync()

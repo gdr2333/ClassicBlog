@@ -1,4 +1,5 @@
 @inherits LayoutComponentBase
+@inject IStringLocalizer<SharedResource> L
 
 <NavMenu />
 
@@ -9,9 +10,9 @@
         </div>
         <div class="col-md-3">
             <div class="panel panel-default">
-                <div class="panel-heading">About</div>
+                <div class="panel-heading">@L["About_Title"]</div>
                 <div class="panel-body">
-                    <p>A demo blog built with Blazor Server, EF Core + SQLite, and the BOOTSTRA.386 theme.</p>
+                    <p>@L["About_Body"]</p>
                 </div>
             </div>
         </div>
@@ -19,12 +20,12 @@
 
     <hr />
     <footer>
-        <p class="text-muted">&copy; @DateTime.Now.Year ClassicBlog &mdash; skinned with BOOTSTRA.386</p>
+        <p class="text-muted">@L["Footer_Text", DateTime.Now.Year]</p>
     </footer>
 </div>
 
 <div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <span class="dismiss">Dismiss</span>
+    @L["Error_Unhandled"]
+    <a href="" class="reload">@L["Error_Reload"]</a>
+    <span class="dismiss">@L["Error_Dismiss"]</span>
 </div>

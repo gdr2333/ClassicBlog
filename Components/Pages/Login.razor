@@ -1,33 +1,34 @@
 @page "/login"
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResource> L
 
-<PageTitle>Sign in — ClassicBlog</PageTitle>
+<PageTitle>@L["Login_PageTitle"]</PageTitle>
 
 <div class="row">
     <div class="col-md-6 col-md-offset-3">
         <div class="panel panel-default">
-            <div class="panel-heading"><h3 class="panel-title">Sign in</h3></div>
+            <div class="panel-heading"><h3 class="panel-title">@L["Login_SignIn"]</h3></div>
             <div class="panel-body">
                 @if (showError)
                 {
-                    <div class="alert alert-danger">Invalid username or password.</div>
+                    <div class="alert alert-danger">@L["Login_Invalid"]</div>
                 }
-                <form action="/account/login" method="post">
+                <form action="/account/login" method="post" data-enhance="false">
                     <AntiforgeryToken />
                     <input type="hidden" name="returnurl" value="@returnUrl" />
                     <div class="form-group">
-                        <label for="username">Username</label>
+                        <label for="username">@L["Login_Username"]</label>
                         <input id="username" name="username" class="form-control" autocomplete="username" required />
                     </div>
                     <div class="form-group">
-                        <label for="password">Password</label>
+                        <label for="password">@L["Login_Password"]</label>
                         <input id="password" name="password" type="password" class="form-control" autocomplete="current-password" required />
                     </div>
-                    <button type="submit" class="btn btn-primary">Sign in</button>
+                    <button type="submit" class="btn btn-primary">@L["Login_SignIn"]</button>
                 </form>
             </div>
         </div>
-        <p class="text-muted small">Accounts are created by an administrator; there is no self-registration.</p>
+        <p class="text-muted small">@L["Login_NoReg"]</p>
     </div>
 </div>
 

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- Nav -->
+  <data name="Nav_Home" xml:space="preserve"><value>首页</value></data>
+  <data name="Nav_Manage" xml:space="preserve"><value>管理</value></data>
+  <data name="Nav_ChangePassword" xml:space="preserve"><value>修改密码</value></data>
+  <data name="Nav_Users" xml:space="preserve"><value>用户</value></data>
+  <data name="Nav_Logout" xml:space="preserve"><value>登出</value></data>
+  <data name="Nav_SignIn" xml:space="preserve"><value>登录</value></data>
+  <data name="Nav_ToggleNav" xml:space="preserve"><value>切换导航</value></data>
+  <!-- Layout -->
+  <data name="About_Title" xml:space="preserve"><value>关于</value></data>
+  <data name="About_Body" xml:space="preserve"><value>一个使用 Blazor Server、EF Core + SQLite 与 BOOTSTRA.386 主题构建的演示博客。</value></data>
+  <data name="Footer_Text" xml:space="preserve"><value>© {0} ClassicBlog — 使用 BOOTSTRA.386 主题</value></data>
+  <data name="Error_Unhandled" xml:space="preserve"><value>发生未处理的错误。</value></data>
+  <data name="Error_Reload" xml:space="preserve"><value>重新加载</value></data>
+  <data name="Error_Dismiss" xml:space="preserve"><value>关闭</value></data>
+  <!-- Common -->
+  <data name="Common_Loading" xml:space="preserve"><value>加载中…</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>保存</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>删除</value></data>
+  <!-- Roles -->
+  <data name="Role_Author" xml:space="preserve"><value>作者</value></data>
+  <data name="Role_Admin" xml:space="preserve"><value>管理员</value></data>
+  <!-- Home -->
+  <data name="Home_RecentPosts" xml:space="preserve"><value>最新文章</value></data>
+  <data name="Home_Subtitle" xml:space="preserve"><value>博客最新内容</value></data>
+  <data name="Home_Visits" xml:space="preserve"><value>主页访问量：{0}</value></data>
+  <data name="Home_Empty" xml:space="preserve"><value>还没有发布任何文章。</value></data>
+  <data name="Home_ReadMore" xml:space="preserve"><value>阅读全文 »</value></data>
+  <!-- Post detail -->
+  <data name="Post_AllPosts" xml:space="preserve"><value>« 全部文章</value></data>
+  <data name="Post_By" xml:space="preserve"><value>作者：{0}</value></data>
+  <data name="Post_Unpublished" xml:space="preserve"><value>未发布</value></data>
+  <data name="Post_Views" xml:space="preserve"><value>浏览：{0}</value></data>
+  <data name="Post_CommentsCount" xml:space="preserve"><value>评论（{0}）</value></data>
+  <data name="Post_NoComments" xml:space="preserve"><value>还没有评论，快来抢沙发！</value></data>
+  <data name="Post_Reply" xml:space="preserve"><value>回复</value></data>
+  <data name="Post_LeaveComment" xml:space="preserve"><value>发表评论</value></data>
+  <data name="Post_LeaveCommentHint" xml:space="preserve"><value>支持 Markdown · 邮箱必填，用于回复通知</value></data>
+  <data name="Post_ReplyingTo" xml:space="preserve"><value>正在回复 {0}</value></data>
+  <data name="Post_Name" xml:space="preserve"><value>昵称</value></data>
+  <data name="Post_Email" xml:space="preserve"><value>邮箱</value></data>
+  <data name="Post_EmailHint" xml:space="preserve"><value>必填，保密</value></data>
+  <data name="Post_Comment" xml:space="preserve"><value>评论内容</value></data>
+  <data name="Post_PostComment" xml:space="preserve"><value>发表评论</value></data>
+  <data name="Post_PostReply" xml:space="preserve"><value>发表回复</value></data>
+  <data name="Post_NotFoundTitle" xml:space="preserve"><value>未找到</value></data>
+  <data name="Post_NotFoundBody" xml:space="preserve"><value>该文章不存在。</value></data>
+  <data name="Post_BackHome" xml:space="preserve"><value>返回首页。</value></data>
+  <!-- Manage -->
+  <data name="Manage_PageTitle" xml:space="preserve"><value>管理 — ClassicBlog</value></data>
+  <data name="Manage_Posts" xml:space="preserve"><value>管理文章</value></data>
+  <data name="Manage_NewPost" xml:space="preserve"><value>+ 新建文章</value></data>
+  <data name="Manage_ColTitle" xml:space="preserve"><value>标题</value></data>
+  <data name="Manage_ColCreated" xml:space="preserve"><value>创建时间</value></data>
+  <data name="Manage_ColStatus" xml:space="preserve"><value>状态</value></data>
+  <data name="Manage_Published" xml:space="preserve"><value>已发布</value></data>
+  <data name="Manage_Draft" xml:space="preserve"><value>草稿</value></data>
+  <data name="Manage_View" xml:space="preserve"><value>查看</value></data>
+  <data name="Manage_Edit" xml:space="preserve"><value>编辑</value></data>
+  <!-- Editor -->
+  <data name="Editor_New" xml:space="preserve"><value>新建文章</value></data>
+  <data name="Editor_Edit" xml:space="preserve"><value>编辑文章</value></data>
+  <data name="Editor_Title" xml:space="preserve"><value>标题</value></data>
+  <data name="Editor_Excerpt" xml:space="preserve"><value>摘要</value></data>
+  <data name="Editor_Content" xml:space="preserve"><value>正文</value></data>
+  <data name="Editor_ContentHint" xml:space="preserve"><value>支持 Markdown</value></data>
+  <data name="Editor_Help" xml:space="preserve"><value>支持：# 标题、**粗体**、*斜体*、`代码`、```代码块```、- 列表、&gt; 引用、[链接](url)、![图片](url)。</value></data>
+  <data name="Editor_Preview" xml:space="preserve"><value>预览</value></data>
+  <data name="Editor_PreviewEmpty" xml:space="preserve"><value>暂无可预览的内容。</value></data>
+  <data name="Editor_Published" xml:space="preserve"><value>已发布</value></data>
+  <data name="Editor_Save" xml:space="preserve"><value>保存</value></data>
+  <!-- Login -->
+  <data name="Login_PageTitle" xml:space="preserve"><value>登录 — ClassicBlog</value></data>
+  <data name="Login_SignIn" xml:space="preserve"><value>登录</value></data>
+  <data name="Login_Invalid" xml:space="preserve"><value>用户名或密码错误。</value></data>
+  <data name="Login_Username" xml:space="preserve"><value>用户名</value></data>
+  <data name="Login_Password" xml:space="preserve"><value>密码</value></data>
+  <data name="Login_NoReg" xml:space="preserve"><value>账户由管理员创建，不开放自助注册。</value></data>
+  <!-- Change password -->
+  <data name="ChangePwd_PageTitle" xml:space="preserve"><value>修改密码 — ClassicBlog</value></data>
+  <data name="ChangePwd_Heading" xml:space="preserve"><value>修改密码</value></data>
+  <data name="ChangePwd_Current" xml:space="preserve"><value>当前密码</value></data>
+  <data name="ChangePwd_New" xml:space="preserve"><value>新密码</value></data>
+  <data name="ChangePwd_Confirm" xml:space="preserve"><value>确认新密码</value></data>
+  <data name="ChangePwd_Update" xml:space="preserve"><value>更新密码</value></data>
+  <data name="ChangePwd_Success" xml:space="preserve"><value>密码修改成功。</value></data>
+  <data name="ChangePwd_Wrong" xml:space="preserve"><value>当前密码不正确。</value></data>
+  <!-- Users -->
+  <data name="Users_PageTitle" xml:space="preserve"><value>用户 — ClassicBlog</value></data>
+  <data name="Users_Heading" xml:space="preserve"><value>用户</value></data>
+  <data name="Users_Manage" xml:space="preserve"><value>管理账户与权限</value></data>
+  <data name="Users_Create" xml:space="preserve"><value>创建用户</value></data>
+  <data name="Users_ColUsername" xml:space="preserve"><value>用户名</value></data>
+  <data name="Users_ColEmail" xml:space="preserve"><value>邮箱</value></data>
+  <data name="Users_ColRole" xml:space="preserve"><value>角色</value></data>
+  <data name="Users_ColCreated" xml:space="preserve"><value>创建时间</value></data>
+  <data name="Users_ColActions" xml:space="preserve"><value>操作</value></data>
+  <data name="Users_Reset" xml:space="preserve"><value>重置密码</value></data>
+  <data name="Users_You" xml:space="preserve"><value>（你）</value></data>
+  <data name="Users_Duplicate" xml:space="preserve"><value>该用户名已存在。</value></data>
+  <!-- Access denied -->
+  <data name="AccessDenied_PageTitle" xml:space="preserve"><value>无权访问 — ClassicBlog</value></data>
+  <data name="AccessDenied_Heading" xml:space="preserve"><value>无权访问</value></data>
+  <data name="AccessDenied_Body" xml:space="preserve"><value>你没有权限查看此页面。</value></data>
+  <data name="AccessDenied_Back" xml:space="preserve"><value>返回首页</value></data>
+  <!-- NotFound -->
+  <data name="NotFound_Title" xml:space="preserve"><value>未找到</value></data>
+  <data name="NotFound_Body" xml:space="preserve"><value>抱歉，你要找的内容不存在。</value></data>
+</root>
