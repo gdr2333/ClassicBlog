@@ -1,0 +1,80 @@
+@page "/manage"
+@attribute [Authorize]
+@inject BlogDbContext Db
+@inject NavigationManager Nav
+
+<PageTitle>Manage — ClassicBlog</PageTitle>
+
+<div class="page-header">
+    <h1>Manage Posts <small><a href="/manage/new" class="btn btn-primary btn-sm">+ New post</a></small></h1>
+</div>
+
+@if (posts is null)
+{
+    <p>Loading…</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Created</th>
+                <th>Status</th>
+                <th>&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var post in posts)
+            {
+                <tr>
+                    <td>@post.Title</td>
+                    <td>@post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                    <td>
+                        @if (post.IsPublished)
+                        {
+                            <span class="label label-success">Published</span>
+                        }
+                        else
+                        {
+                            <span class="label label-default">Draft</span>
+                        }
+                    </td>
+                    <td>
+                        <a href="@($"/post/{post.Id}")" class="btn btn-default btn-xs">View</a>
+                        <a href="@($"/manage/{post.Id}/edit")" class="btn btn-default btn-xs">Edit</a>
+                        <button type="button" class="btn btn-danger btn-xs" @onclick="async () => await DeleteAsync(post.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Post>? posts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        posts = await Db.Posts
+            .AsNoTracking()
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        var post = await Db.Posts.FirstOrDefaultAsync(p => p.Id == id);
+        if (post is not null)
+        {
+            Db.Posts.Remove(post);
+            await Db.SaveChangesAsync();
+        }
+        await ReloadAsync();
+    }
+}

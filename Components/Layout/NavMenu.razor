@@ -1,0 +1,44 @@
+<nav class="navbar navbar-default navbar-static-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-nav">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">ClassicBlog</a>
+        </div>
+
+        <div class="collapse navbar-collapse" id="main-nav">
+            <ul class="nav navbar-nav">
+                <li><NavLink href="" Match="NavLinkMatch.All">Home</NavLink></li>
+                <AuthorizeView>
+                    <li><NavLink href="manage">Manage</NavLink></li>
+                </AuthorizeView>
+            </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <AuthorizeView>
+                    <Authorized>
+                        <li><a href="/account/change-password">Change password</a></li>
+                        <AuthorizeView Roles="@Roles.Admin" Context="adminCtx">
+                            <li><NavLink href="admin/users">Users</NavLink></li>
+                        </AuthorizeView>
+                        <li>
+                            <form action="/account/logout" method="post" class="navbar-form">
+                                <AntiforgeryToken />
+                                <button type="submit" class="btn btn-default btn-sm">
+                                    Log out (@context.User.Identity?.Name)
+                                </button>
+                            </form>
+                        </li>
+                    </Authorized>
+                    <NotAuthorized>
+                        <li><a href="/login">Sign in</a></li>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </ul>
+        </div>
+    </div>
+</nav>

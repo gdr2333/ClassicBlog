@@ -1,0 +1,179 @@
+@page "/post/{id:int}"
+@inject BlogDbContext Db
+@inject CommentService Comments
+@inject AuthenticationStateProvider AuthState
+@inject AccountService Accounts
+
+<PageTitle>@(post?.Title ?? "Post") — ClassicBlog</PageTitle>
+
+@if (post is null)
+{
+    <div class="alert alert-warning">
+        <h3>Not found</h3>
+        <p>That post does not exist. <a href="/">Back to the home page</a>.</p>
+    </div>
+}
+else
+{
+    <a href="/" class="btn btn-default btn-sm">&laquo; All posts</a>
+    <h1>@post.Title</h1>
+    <p class="text-muted">
+        @post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+        @if (post.Author is not null)
+        {
+            <text> · by @post.Author.Username</text>
+        }
+        @if (!post.IsPublished)
+        {
+            <span class="label label-warning">Unpublished</span>
+        }
+    </p>
+
+    <div class="post-content">@((MarkupString)MarkdownRenderer.ToHtml(post.Content))</div>
+
+    <hr />
+
+    <h3>Comments (@post.Comments.Count)</h3>
+
+    @if (roots.Count == 0)
+    {
+        <p class="text-muted">No comments yet. Be the first!</p>
+    }
+    else
+    {
+        @foreach (var c in roots)
+        {
+            <CommentNode Comment="c" Depth="0"
+                         ChildrenByParent="childrenByParent" OnReply="StartReply" />
+        }
+    }
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            @if (replyTarget is null)
+            {
+                <text>Leave a comment <small class="text-muted">(Markdown supported · email required for reply notifications)</small></text>
+            }
+            else
+            {
+                <text>
+                    Replying to <strong>@replyTarget.Author</strong>
+                    <button type="button" class="btn btn-link btn-xs" @onclick="CancelReply">cancel</button>
+                </text>
+            }
+        </div>
+        <div class="panel-body">
+            <EditForm Model="newComment" OnValidSubmit="AddCommentAsync">
+                <DataAnnotationsValidator />
+
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label for="author">Name</label>
+                        <InputText id="author" class="form-control" @bind-Value="newComment.Author" />
+                        <ValidationMessage For="@(() => newComment.Author)" />
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label for="email">Email <small class="text-muted">(required, kept private)</small></label>
+                        <InputText id="email" class="form-control" @bind-Value="newComment.Email" />
+                        <ValidationMessage For="@(() => newComment.Email)" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="content">Comment</label>
+                    <InputTextArea id="content" class="form-control" rows="4" @bind-Value="newComment.Content" />
+                    <ValidationMessage For="@(() => newComment.Content)" />
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    @(replyTarget is null ? "Post comment" : "Post reply")
+                </button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Post? post;
+    private List<Comment> roots = new();
+    private Dictionary<int, List<Comment>> childrenByParent = new();
+    private NewCommentForm newComment = new();
+    private Comment? replyTarget;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Prefill name/email from the logged-in account when available.
+        var name = (await AuthState.GetAuthenticationStateAsync()).User.Identity?.Name;
+        if (name is not null)
+        {
+            var me = await Accounts.FindByNameAsync(name);
+            if (me is not null)
+            {
+                newComment.Author = me.Username;
+                newComment.Email = me.Email ?? string.Empty;
+            }
+        }
+
+        await LoadPostAsync();
+    }
+
+    private async Task LoadPostAsync()
+    {
+        post = await Db.Posts
+            .Include(p => p.Comments)
+            .Include(p => p.Author)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == Id);
+
+        roots.Clear();
+        childrenByParent.Clear();
+
+        if (post is null) return;
+
+        roots = post.Comments
+            .Where(c => c.ParentCommentId == null)
+            .OrderBy(c => c.CreatedAt)
+            .ToList();
+
+        childrenByParent = post.Comments
+            .Where(c => c.ParentCommentId != null)
+            .GroupBy(c => c.ParentCommentId!.Value)
+            .ToDictionary(g => g.Key, g => g.OrderBy(c => c.CreatedAt).ToList());
+    }
+
+    private void StartReply(int commentId)
+    {
+        replyTarget = post?.Comments.FirstOrDefault(c => c.Id == commentId);
+    }
+
+    private void CancelReply() => replyTarget = null;
+
+    private async Task AddCommentAsync()
+    {
+        if (post is null) return;
+
+        await Comments.AddCommentAsync(
+            postId: post.Id,
+            parentCommentId: replyTarget?.Id,
+            author: newComment.Author,
+            email: newComment.Email,
+            content: newComment.Content);
+
+        // Reset the form but keep the commenter's identity for convenience.
+        var keepAuthor = newComment.Author;
+        var keepEmail = newComment.Email;
+        newComment = new NewCommentForm { Author = keepAuthor, Email = keepEmail };
+        replyTarget = null;
+
+        await LoadPostAsync();
+    }
+
+    private class NewCommentForm
+    {
+        [Required, StringLength(64)] public string Author { get; set; } = "Anonymous";
+        [Required, EmailAddress, StringLength(256)] public string Email { get; set; } = string.Empty;
+        [Required, StringLength(1000)] public string Content { get; set; } = string.Empty;
+    }
+}

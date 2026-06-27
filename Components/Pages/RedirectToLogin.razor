@@ -1,0 +1,10 @@
+@* Forces a full reload so the HTTP cookie is re-read after a fresh login. *@
+@inject NavigationManager Nav
+
+@code {
+    protected override void OnInitialized()
+    {
+        var pathAndQuery = new Uri(Nav.Uri).PathAndQuery;
+        Nav.NavigateTo($"/login?ReturnUrl={Uri.EscapeDataString(pathAndQuery)}", forceLoad: true);
+    }
+}

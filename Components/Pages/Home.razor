@@ -1,0 +1,46 @@
+@page "/"
+@inject BlogDbContext Db
+
+<PageTitle>ClassicBlog</PageTitle>
+
+<div class="page-header">
+    <h1>Recent Posts <small>latest from the blog</small></h1>
+</div>
+
+@if (posts is null)
+{
+    <p>Loading…</p>
+}
+else if (posts.Count == 0)
+{
+    <div class="alert alert-info">No posts have been published yet.</div>
+}
+else
+{
+    @foreach (var post in posts)
+    {
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <a href="@($"/post/{post.Id}")"><strong>@post.Title</strong></a>
+            </div>
+            <div class="panel-body">
+                <p class="text-muted small">@post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</p>
+                <p>@post.Excerpt</p>
+                <a href="@($"/post/{post.Id}")" class="btn btn-default btn-sm">Read more &raquo;</a>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private List<Post>? posts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        posts = await Db.Posts
+            .AsNoTracking()
+            .Where(p => p.IsPublished)
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+    }
+}

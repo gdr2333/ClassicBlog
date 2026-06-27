@@ -1,0 +1,158 @@
+@page "/manage/new"
+@page "/manage/{id:int}/edit"
+@attribute [Authorize]
+@inject BlogDbContext Db
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthState
+@inject AccountService Accounts
+
+<PageTitle>@(IsNew ? "New Post" : "Edit Post") — ClassicBlog</PageTitle>
+
+<div class="page-header">
+    <h1>@(IsNew ? "New Post" : "Edit Post")</h1>
+</div>
+
+@if (model is null)
+{
+    <p>Loading…</p>
+}
+else
+{
+    <EditForm Model="model" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+
+        <div class="form-group">
+            <label for="title">Title</label>
+            <InputText id="title" class="form-control" @bind-Value="model.Title" />
+            <ValidationMessage For="@(() => model.Title)" />
+        </div>
+
+        <div class="form-group">
+            <label for="excerpt">Excerpt</label>
+            <InputText id="excerpt" class="form-control" @bind-Value="model.Excerpt" />
+            <ValidationMessage For="@(() => model.Excerpt)" />
+        </div>
+
+        <div class="form-group">
+            <label for="content">Content <small class="text-muted">(Markdown supported)</small></label>
+            <InputTextArea id="content" class="form-control" rows="14" @bind-Value="model.Content" @oninput="OnContentInput" />
+            <ValidationMessage For="@(() => model.Content)" />
+            <span class="help-block text-muted">
+                Supports: <code># headings</code>, <code>**bold**</code>, <code>*italic*</code>,
+                <code>`code`</code>, <code>```fenced```</code>, <code>- lists</code>,
+                <code>&gt; quote</code>, <code>[link](url)</code>, <code>![img](url)</code>.
+            </span>
+        </div>
+
+        <div class="form-group">
+            <label>Preview</label>
+            <div class="post-content well well-sm">
+                @if (string.IsNullOrWhiteSpace(previewText))
+                {
+                    <span class="text-muted">Nothing to preview yet.</span>
+                }
+                else
+                {
+                    @((MarkupString)MarkdownRenderer.ToHtml(previewText))
+                }
+            </div>
+        </div>
+
+        <div class="checkbox">
+            <label>
+                <InputCheckbox @bind-Value="model.IsPublished" /> Published
+            </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="/manage" class="btn btn-default">Cancel</a>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private PostEditModel? model;
+    private string previewText = string.Empty;
+    private int? currentUserId;
+    private bool IsNew => Id == 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var name = (await AuthState.GetAuthenticationStateAsync()).User.Identity?.Name;
+        if (name is not null)
+            currentUserId = (await Accounts.FindByNameAsync(name))?.Id;
+
+        if (IsNew)
+        {
+            model = new PostEditModel { IsPublished = true };
+        }
+        else
+        {
+            var post = await Db.Posts.AsNoTracking().FirstOrDefaultAsync(p => p.Id == Id);
+            model = post is null
+                ? null
+                : new PostEditModel
+                {
+                    Title = post.Title,
+                    Excerpt = post.Excerpt,
+                    Content = post.Content,
+                    IsPublished = post.IsPublished,
+                };
+        }
+        previewText = model?.Content ?? string.Empty;
+    }
+
+    private void OnContentInput(ChangeEventArgs e) => previewText = e.Value?.ToString() ?? string.Empty;
+
+    private async Task SaveAsync()
+    {
+        if (model is null) return;
+
+        if (IsNew)
+        {
+            var now = DateTime.UtcNow;
+            Db.Posts.Add(new Post
+            {
+                Title = model.Title,
+                Slug = Post.MakeSlug(model.Title),
+                Excerpt = model.Excerpt,
+                Content = model.Content,
+                IsPublished = model.IsPublished,
+                AuthorId = currentUserId,
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+        }
+        else
+        {
+            var post = await Db.Posts.FirstOrDefaultAsync(p => p.Id == Id);
+            if (post is null) return;
+
+            post.Title = model.Title;
+            post.Slug = Post.MakeSlug(model.Title);
+            post.Excerpt = model.Excerpt;
+            post.Content = model.Content;
+            post.IsPublished = model.IsPublished;
+            post.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await Db.SaveChangesAsync();
+        Nav.NavigateTo("/manage");
+    }
+
+    // Edit model keeps validation attributes without coupling the form to the entity.
+    private class PostEditModel
+    {
+        [System.ComponentModel.DataAnnotations.Required, StringLength(200)]
+        public string Title { get; set; } = string.Empty;
+
+        [StringLength(500)]
+        public string Excerpt { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Content { get; set; } = string.Empty;
+
+        public bool IsPublished { get; set; }
+    }
+}

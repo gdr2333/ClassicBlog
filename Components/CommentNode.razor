@@ -1,0 +1,30 @@
+<div class="comment-node" style="margin-left:@(Depth * 24)px">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <strong>@Comment.Author</strong>
+            <span class="text-muted small">@Comment.Email · @Comment.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+        </div>
+        <div class="panel-body">
+            <div class="comment-body">@((MarkupString)MarkdownRenderer.ToHtml(Comment.Content))</div>
+            <button class="btn btn-default btn-xs" @onclick="() => OnReply.InvokeAsync(Comment.Id)">Reply</button>
+        </div>
+    </div>
+
+    @if (Children.Count > 0)
+    {
+        @foreach (var child in Children)
+        {
+            <CommentNode Comment="child" Depth="Depth + 1"
+                         ChildrenByParent="ChildrenByParent" OnReply="OnReply" />
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public Comment Comment { get; set; } = null!;
+    [Parameter] public int Depth { get; set; }
+    [Parameter] public Dictionary<int, List<Comment>> ChildrenByParent { get; set; } = new();
+    [Parameter] public EventCallback<int> OnReply { get; set; }
+
+    private List<Comment> Children => ChildrenByParent.TryGetValue(Comment.Id, out var kids) ? kids : new();
+}

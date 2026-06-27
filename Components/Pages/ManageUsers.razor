@@ -1,0 +1,192 @@
+@page "/admin/users"
+@attribute [Authorize(Roles = Roles.Admin)]
+@inject BlogDbContext Db
+@inject AccountService Accounts
+@inject AuthenticationStateProvider AuthState
+
+<PageTitle>Users — ClassicBlog</PageTitle>
+
+<div class="page-header">
+    <h1>Users <small>manage accounts &amp; permissions</small></h1>
+</div>
+
+@if (users is null)
+{
+    <p>Loading…</p>
+}
+else
+{
+    <div class="panel panel-default">
+        <div class="panel-heading">Create user</div>
+        <div class="panel-body">
+            <EditForm Model="newUser" OnValidSubmit="CreateAsync">
+                <DataAnnotationsValidator />
+                <div class="row">
+                    <div class="col-md-3 form-group">
+                        <label>Username</label>
+                        <InputText class="form-control" @bind-Value="newUser.Username" />
+                        <ValidationMessage For="@(() => newUser.Username)" />
+                    </div>
+                    <div class="col-md-3 form-group">
+                        <label>Email</label>
+                        <InputText class="form-control" @bind-Value="newUser.Email" placeholder="user@example.com" />
+                        <ValidationMessage For="@(() => newUser.Email)" />
+                    </div>
+                    <div class="col-md-3 form-group">
+                        <label>Password</label>
+                        <InputText type="password" class="form-control" @bind-Value="newUser.Password" />
+                        <ValidationMessage For="@(() => newUser.Password)" />
+                    </div>
+                    <div class="col-md-2 form-group">
+                        <label>Role</label>
+                        <InputSelect class="form-control" @bind-Value="newUser.Role">
+                            <option value="@Roles.Author">Author</option>
+                            <option value="@Roles.Admin">Admin</option>
+                        </InputSelect>
+                    </div>
+                    <div class="col-md-1 form-group">
+                        <label>&nbsp;</label>
+                        <button type="submit" class="btn btn-primary btn-block">Create</button>
+                    </div>
+                </div>
+                @if (createError is not null)
+                {
+                    <div class="alert alert-danger">@createError</div>
+                }
+            </EditForm>
+        </div>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var u in users)
+            {
+                <tr>
+                    <td>@u.Username @if (u.Id == currentUserId) { <span class="text-muted">(you)</span> }</td>
+                    <td style="width:220px">
+                        <input class="form-control input-sm" value="@u.Email" placeholder="user@example.com"
+                               @onchange="@(e => SetEmailAsync(u.Id, e.Value?.ToString()))" />
+                    </td>
+                    <td style="width:160px">
+                        <select class="form-control input-sm" value="@u.Role"
+                                @onchange="@(e => SetRoleAsync(u.Id, e.Value?.ToString() ?? Roles.Author))">
+                            <option value="@Roles.Author">Author</option>
+                            <option value="@Roles.Admin">Admin</option>
+                        </select>
+                    </td>
+                    <td>@u.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                    <td>
+                        @if (resettingId == u.Id)
+                        {
+                            <input type="password" placeholder="new password" class="input-sm"
+                                   @bind="resetPassword" />
+                            <button class="btn btn-default btn-xs" @onclick="async () => await ResetAsync(u.Id)">Save</button>
+                            <button class="btn btn-link btn-xs" @onclick="CancelReset">Cancel</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-default btn-xs" @onclick="() => StartReset(u.Id)">Reset password</button>
+                        }
+                        <button class="btn btn-danger btn-xs" disabled="@(u.Id == currentUserId)"
+                                @onclick="async () => await DeleteAsync(u.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<ApplicationUser>? users;
+    private int currentUserId;
+    private NewUserForm newUser = new();
+    private string? createError;
+    private int? resettingId;
+    private string resetPassword = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var name = (await AuthState.GetAuthenticationStateAsync()).User.Identity?.Name;
+        if (name is not null)
+        {
+            var me = await Accounts.FindByNameAsync(name);
+            if (me is not null) currentUserId = me.Id;
+        }
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        users = await Db.Users.AsNoTracking().OrderBy(u => u.Username).ToListAsync();
+    }
+
+    private async Task CreateAsync()
+    {
+        createError = null;
+        if (await Accounts.FindByNameAsync(newUser.Username) is not null)
+        {
+            createError = "That username already exists.";
+            return;
+        }
+
+        await Accounts.CreateAsync(newUser.Username, newUser.Password, newUser.Role);
+        newUser = new NewUserForm();
+        await ReloadAsync();
+    }
+
+    private async Task SetRoleAsync(int id, string role)
+    {
+        if (role != Roles.Admin && role != Roles.Author) return;
+        await Accounts.SetRoleAsync(id, role);
+        await ReloadAsync();
+    }
+
+    private async Task SetEmailAsync(int id, string? email)
+    {
+        await Accounts.SetEmailAsync(id, email);
+        await ReloadAsync();
+    }
+
+    private void StartReset(int id)
+    {
+        resettingId = id;
+        resetPassword = string.Empty;
+    }
+
+    private void CancelReset()
+    {
+        resettingId = null;
+        resetPassword = string.Empty;
+    }
+
+    private async Task ResetAsync(int id)
+    {
+        if (string.IsNullOrWhiteSpace(resetPassword)) return;
+        await Accounts.ResetPasswordAsync(id, resetPassword);
+        CancelReset();
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        if (id == currentUserId) return; // never delete self
+        await Accounts.DeleteAsync(id);
+        await ReloadAsync();
+    }
+
+    private class NewUserForm
+    {
+        [Required, StringLength(64)] public string Username { get; set; } = string.Empty;
+        [EmailAddress, StringLength(256)] public string? Email { get; set; }
+        [Required, MinLength(6)] public string Password { get; set; } = string.Empty;
+        [Required] public string Role { get; set; } = Roles.Author;
+    }
+}
